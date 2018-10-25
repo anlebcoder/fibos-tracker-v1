@@ -1,6 +1,7 @@
 const App = require('fib-app');
 const http = require("http");
 const mq = require("mq");
+const FIBOS = require("fibos.js");
 const conf = require("./conf/conf.json");
 
 module.exports = function() {
@@ -49,5 +50,31 @@ module.exports = function() {
 		]));
 		httpServer.crossDomain = true;
 		httpServer.asyncRun();
+
+		let nodeConfig = this.Config.nodeConfig;
+
+		let fibos = FIBOS({
+			chainId: nodeConfig.chainId,
+			httpEndpoint: nodeConfig.httpEndpoint,
+			logger: {
+				log: null,
+				error: null
+			}
+		});
+
+		setInterval(() => {
+			try {
+				let bn = fibos.getInfoSync().last_irreversible_block_num;
+
+				let r = app.db(db => {
+					return db.models.transactions.updateStatus(bn);
+				});
+
+				console.notice("update transactions irreversible block:", r);
+			} catch (e) {
+				console.error(e.stack);
+			}
+
+		}, 1 * 1000);
 	};
 }
