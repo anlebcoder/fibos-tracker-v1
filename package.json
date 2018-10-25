@@ -1,0 +1,16 @@
+{
+	"name": "fibos-app",
+	"main": "index.js",
+	"version": "1.0.0",
+	"description": "fibos chain data storage and api iframe",
+	"repository": "",
+	"keywords": "",
+	"author": "an.wu@d3j.io",
+	"license": "ISC",
+	"dependencies": {
+		"bignumber.js": "^7.2.1",
+		"fib-app": "1.10.0",
+		"fibos.js": "^0.3.1",
+		"viz.js": "1.8.0"
+	}
+}
