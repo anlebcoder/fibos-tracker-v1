@@ -1,5 +1,7 @@
 const App = require('fib-app');
 const http = require("http");
+const path = require("path");
+const fs = require("fs");
 const mq = require("mq");
 const FIBOS = require("fibos.js");
 const conf = require("./conf/conf.json");
@@ -97,6 +99,8 @@ function FIBOS_APP() {
 
 	this.startServer = () => {
 		console.notice("httpServer listen on 0.0.0.0:%s", Config.httpServerPort);
+
+		fs.writeTextFile(path.join(__dirname, 'diagram.svg'), app.diagram());
 
 		let httpServer = new http.Server("", Config.httpServerPort, new mq.Chain([{
 				'^/ping': function(req) {

@@ -1,5 +1,7 @@
 # fibos-tracker
 
+![数据模型](./diagram.svg)
+
 fibos-tracker 是一个 FIBOS 区块链 数据 API 服务框架，基于 fib-app 框架实现(https://github.com/fibjs/fib-app).
 
 - 提供对 fibos 区块数据的 emitter 监听事件
