@@ -101,13 +101,12 @@ fibos.start();
 
 ```
 const App = require("fibos-app");
-const app = new App();
 
-console.log(app.Config); //打印 配置
+console.log(App.Config); //打印 配置
 
-app.Config.websocketEnable = true; //设置属性
+App.Config.websocketEnable = true; //设置属性
 
-app.Config.DBconnString = "mysql://root:123456@127.0.0.1/fibos_chain"; //设置数据存储引擎为 Mysql
+App.Config.DBconnString = "mysql://root:123456@127.0.0.1/fibos_chain"; //设置数据存储引擎为 Mysql
 ```
 
 
