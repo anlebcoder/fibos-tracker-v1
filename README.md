@@ -1,6 +1,6 @@
-# fibos-app
+# fibos-tracker
 
-fibos-app 是一个 FIBOS 区块链 数据 API 服务框架，基于 fib-app 框架实现(https://github.com/fibjs/fib-app).
+fibos-tracker 是一个 FIBOS 区块链 数据 API 服务框架，基于 fib-app 框架实现(https://github.com/fibjs/fib-app).
 
 - 提供对 fibos 区块数据的 emitter 监听事件
 - 提供 http 服务，支持 GraphQL 调用
@@ -17,13 +17,13 @@ fibos-app 是一个 FIBOS 区块链 数据 API 服务框架，基于 fib-app 框
 ## Install
 
 ```
-npm install fibos-app [--save] (稍后提交到 NPM)
+npm install fibos-tracker [--save] (稍后提交到 NPM)
 ```
 
 ## 框架说明
 
-1. fibos-app 提供 emitter 监听，默认框架存储所有事务数据(transactions)
-2. fibos-app 框架存储事务数据后，触发 hook 调用，通知其他 数据存储 app
+1. fibos-tracker 提供 emitter 监听，默认框架存储所有事务数据(transactions)
+2. fibos-tracker 框架存储事务数据后，触发 hook 调用，通知其他 数据存储 app
 
 ## API 说明
 
@@ -36,8 +36,8 @@ npm install fibos-app [--save] (稍后提交到 NPM)
 ### 快速了解
 ```
 
-// fibos-app 框架对象
-const App = require("fibos-app");
+// fibos-tracker 框架对象
+const App = require("fibos-tracker");
 const app = new App();
 
 //启动 FIBOS 节点，相关内容请前往 https://fibos.io 官方
@@ -76,7 +76,7 @@ fibos.start();
 
 ```
 
-### 配置 fibos-app Config
+### 配置 fibos-tracker Config
 
 ```
 {
@@ -100,7 +100,7 @@ fibos.start();
 使用自定义配置：
 
 ```
-const App = require("fibos-app");
+const App = require("fibos-tracker");
 
 console.log(App.Config); //打印 配置
 
