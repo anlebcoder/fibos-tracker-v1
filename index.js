@@ -5,9 +5,8 @@ const fs = require("fs");
 const mq = require("mq");
 const FIBOS = require("fibos.js");
 const conf = require("./conf/conf.json");
-const BigNumber = require("bignumber.js");
 
-function FIBOS_APP() {
+function Tracker() {
 
 	let Config = conf;
 	let hooks = {};
@@ -29,7 +28,7 @@ function FIBOS_APP() {
 		console.time("emitter-running");
 		message = JSON.stringify(message, function(key, value) {
 			if (typeof value === 'bigint') {
-				return new BigNumber(value).toFixed();
+				return value.toString();
 			} else {
 				return value;
 			}
@@ -41,6 +40,7 @@ function FIBOS_APP() {
 
 		let block_info = {
 			block_time: message.block_time,
+			producer: message.producer,
 			block_num: message.block_num,
 			producer_block_id: message.producer_block_id
 		}
@@ -70,22 +70,29 @@ function FIBOS_APP() {
 		app.db(db => {
 			try {
 				db.trans(() => {
-					let blocks_has_id = db.models.blocks.save(block_info).id;
+					let blocksTable = db.models.blocks;
+					let actionsTable = db.models.actions;
 
-					let transactions_has_id = 0;
+					let _block = blocksTable.save(block_info);
 
-					messages = ats.map((at) => {
-						at.blocks_has_id = blocks_has_id;
-						at.transactions_has_id = transactions_has_id;
-						let rs = db.models.transactions.createSync(at);
+					let previousAction = null;
 
-						transactions_has_id = rs.id;
+					messages = ats.map((at, index) => {
+						let _action = actionsTable.createSync(at);
 
-						return rs;
+						_block.addActions(_action);
+
+						if (previousAction) {
+							previousAction.addInlineactions(_action);
+						}
+
+						previousAction = _action;
+
+						return _action;
 					});
 				});
 			} catch (e) {
-				console.error(e);
+				console.error(e, e.stack);
 				console.error(message);
 				process.exit();
 			}
@@ -102,11 +109,13 @@ function FIBOS_APP() {
 
 		fs.writeTextFile(path.join(__dirname, 'diagram.svg'), app.diagram());
 
-		let httpServer = new http.Server("", Config.httpServerPort, new mq.Chain([{
+		let httpServer = new http.Server("", Config.httpServerPort, new mq.Chain([(req) => {
+				req.session = {};
+			}, {
 				'^/ping': function(req) {
 					req.response.write("pong");
 				},
-				'/v1/app': app,
+				'/1.0/app': app,
 				"*": [
 					function(req) {}
 				]
@@ -140,10 +149,10 @@ function FIBOS_APP() {
 				console.error(e.stack);
 			}
 
-		}, 1 * 1000);
+		}, 60 * 1000);
 	};
 }
 
-FIBOS_APP.Config = conf;
+Tracker.Config = conf;
 
-module.exports = FIBOS_APP;
+module.exports = Tracker;
