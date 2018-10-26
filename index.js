@@ -80,13 +80,14 @@ function Tracker() {
 					messages = ats.map((at, index) => {
 						let _action = actionsTable.createSync(at);
 
-						_block.addActions(_action);
+						if (index === 0) {
+							_block.addActions(_action);
+							previousAction = _action;
+						}
 
 						if (previousAction) {
 							previousAction.addInlineactions(_action);
 						}
-
-						previousAction = _action;
 
 						return _action;
 					});

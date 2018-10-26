@@ -106,7 +106,7 @@ const App = require("fibos-tracker");
 
 console.log(App.Config); //打印 配置
 
-App.Config.websocketEnable = true; //设置属性
+App.Config.websocketEnable = true; //设置开启websocket属性
 
 App.Config.DBconnString = "mysql://root:123456@127.0.0.1/fibos_chain"; //设置数据存储引擎为 Mysql
 ```
@@ -169,3 +169,241 @@ app.use("eosio_transactions",require("./defs/eosio_transactions.js"));
 
 ```
 
+## GraphQL API使用示例
+
+
+### blocks 获取列表
+
+```
+graphql(`
+{
+    find_blocks(
+        skip: 0,
+        limit: 10,
+        order: "-id"
+    ){
+        id,
+        block_time,
+        block_num,
+        producer_block_id,
+        producer,
+        status,
+        createdAt,
+        updatedAt
+    }
+}`)
+```
+
+结果:
+
+```
+{
+  "data": {
+    "find_blocks": [
+      {
+        "id": 1,
+        "block_time": "2018-10-26T08:23:03.000Z",
+        "block_num": 6,
+        "producer_block_id": "00000006d8db54474d0342a55a73b4417f7071b123470dfc1e764622b121e77f",
+        "producer": "eosio",
+        "status": "no",
+        "createdAt": "2018-10-26T09:44:51.016Z",
+        "updatedAt": "2018-10-26T09:44:51.016Z"
+      }
+    ]
+  }
+}
+```
+
+### blocks 获取详情
+
+```
+graphql(`
+{
+    blocks(id:"${id}"){
+        id,
+        block_time,
+        block_num,
+		producer_block_id,
+		producer,
+		status,
+		createdAt,
+		updatedAt,
+		actions{
+			id,
+			trx_id,
+			contract_name,
+			action,
+			authorization,
+			data,
+			createdAt,
+			updatedAt
+		}
+    }
+}`)
+```
+
+结果：
+
+```
+{
+  "data": {
+    "blocks": {
+      "id": 1,
+      "block_time": "2018-10-26T08:23:03.000Z",
+      "block_num": 6,
+      "producer_block_id": "00000006d8db54474d0342a55a73b4417f7071b123470dfc1e764622b121e77f",
+      "producer": "eosio",
+      "status": "no",
+      "createdAt": "2018-10-26T09:44:51.016Z",
+      "updatedAt": "2018-10-26T09:44:51.016Z",
+      "actions": [
+        {
+          "id": 1,
+          "trx_id": "89fa767edb8e5559664fc987bf0c2721d9b083dfc092251c79a3c8608bbf8f4a",
+          "contract_name": "eosio",
+          "action": "newaccount",
+          "authorization": [
+            "eosio@active"
+          ],
+          "data": {
+            "creator": "eosio",
+            "name": "eosio.msig",
+            "owner": {
+              "threshold": "1",
+              "keys": [
+                {
+                  "key": "FO6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
+                  "weight": "1"
+                }
+              ],
+              "accounts": [],
+              "waits": []
+            },
+            "active": {
+              "threshold": "1",
+              "keys": [
+                {
+                  "key": "FO6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
+                  "weight": "1"
+                }
+              ],
+              "accounts": [],
+              "waits": []
+            }
+          },
+          "createdAt": "2018-10-26T09:44:51.051Z",
+          "updatedAt": "2018-10-26T09:44:51.051Z"
+        }
+      ]
+    }
+  }
+}
+```
+
+### actions 获取列表
+
+```
+graphql(`
+{
+    find_actions(
+        skip: 0,
+        limit: 10,
+        order: "-id"
+    ){
+        id,
+		trx_id,
+		contract_name,
+		action,
+		authorization,
+		data,
+		createdAt,
+		updatedAt
+    }
+}`)
+```
+
+结果：
+```
+{
+  "data": {
+    "find_actions": [
+      {
+        "id": 1,
+        "trx_id": "89fa767edb8e5559664fc987bf0c2721d9b083dfc092251c79a3c8608bbf8f4a",
+        "contract_name": "eosio",
+        "action": "newaccount",
+        "authorization": [
+          "eosio@active"
+        ],
+        "data": {
+          "creator": "eosio",
+          "name": "eosio.msig",
+          "owner": {
+            "threshold": "1",
+            "keys": [
+              {
+                "key": "FO6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
+                "weight": "1"
+              }
+            ],
+            "accounts": [],
+            "waits": []
+          },
+          "active": {
+            "threshold": "1",
+            "keys": [
+              {
+                "key": "FO6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV",
+                "weight": "1"
+              }
+            ],
+            "accounts": [],
+            "waits": []
+          }
+        },
+        "createdAt": "2018-10-26T09:44:51.051Z",
+        "updatedAt": "2018-10-26T09:44:51.051Z"
+      }
+    ]
+  }
+}
+```
+
+### actions 获取详情
+
+```
+graphql(`
+{
+    actions(id:"${id}"){
+       	id,
+		trx_id,
+		contract_name,
+		action,
+		authorization,
+		data,
+		createdAt,
+		updatedAt
+		blocks{
+			id,
+            block_time,
+            block_num,
+			producer_block_id,
+			producer,
+			status,
+			createdAt,
+			updatedAt
+		},
+		inlineactions{
+			id,
+			trx_id,
+			contract_name,
+			action,
+			authorization,
+			data,
+			createdAt,
+			updatedAt
+		}
+    }
+}`)
+```
