@@ -1,8 +1,6 @@
 const test = require('test');
 test.setup();
 
-
-
 describe("blocks case", () => {
 
 	let id = 0;
@@ -10,20 +8,20 @@ describe("blocks case", () => {
 	it("find blocks list", () => {
 		let r = graphql(`
 			{
-                find_blocks(
-                    skip: 0,
-                    limit: 10,
-                    order: "-id"
-                ){
-                    id,
-                    block_time,
-                    block_num,
+				find_blocks(
+					skip: 0,
+					limit: 10,
+					order: "-id"
+				){
+					id,
+					block_time,
+					block_num,
 					producer_block_id,
 					producer,
 					status,
 					createdAt,
 					updatedAt
-                }
+				}
             }`).json();
 
 		assert.ok(r.data.find_blocks.length > 0);
@@ -34,17 +32,17 @@ describe("blocks case", () => {
 
 		let r = graphql(`
 			{
-                blocks(id:"${id}"){
-                    id,
-                    block_time,
-                    block_num,
+				blocks(id:"${id}"){
+					id,
+					block_time,
+					block_num,
 					producer_block_id,
 					producer,
 					status,
 					createdAt,
 					updatedAt
-                }
-            }`).json();
+				}
+}		`).json();
 
 		assert.equal(r.data.blocks.id, 1);
 	});
@@ -53,28 +51,28 @@ describe("blocks case", () => {
 		let id = 1;
 
 		let r = graphql(`
-			{
-                blocks(id:"${id}"){
-                	id,
-                    block_time,
-                    block_num,
-					producer_block_id,
-					producer,
-					status,
+		{
+			blocks(id: "${id}") {
+				id,
+				block_time,
+				block_num,
+				producer_block_id,
+				producer,
+				status,
+				createdAt,
+				updatedAt,
+				actions {
+					id,
+					trx_id,
+					contract_name,
+					action,
+					authorization,
+					data,
 					createdAt,
-					updatedAt,
-					actions{
-						id,
-						trx_id,
-						contract_name,
-						action,
-						authorization,
-						data,
-						createdAt,
-						updatedAt
+					updatedAt
 					}
-                }
-            }`).json();
+				}
+			}`).json();
 
 		assert.equal(r.data.blocks.actions[0].id, 1);
 	});
