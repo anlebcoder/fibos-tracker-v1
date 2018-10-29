@@ -23,7 +23,7 @@ describe("actions case", () => {
                 }
             }`).json();
 
-		assert.equal(r.data.find_actions.length, 1);
+		assert.ok(r.data.find_actions.length > 0);
 		assert.ok(r.data.find_actions[0].trx_id);
 	});
 
@@ -62,7 +62,7 @@ describe("actions case", () => {
 					data,
 					createdAt,
 					updatedAt
-					blocks{
+					block{
 						id,
 	                    block_time,
 	                    block_num,
@@ -72,7 +72,7 @@ describe("actions case", () => {
 						createdAt,
 						updatedAt
 					},
-					inlineactions{
+					inline_actions{
 						id,
 						trx_id,
 						contract_name,
@@ -85,7 +85,7 @@ describe("actions case", () => {
                 }
             }`).json();
 
-		assert.equal(r.data.actions.inlineactions.length, 0);
-		assert.equal(r.data.actions.blocks.length, 1);
+		assert.equal(r.data.actions.inline_actions.length, 0);
+		assert.equal(r.data.actions.block.length, 1);
 	});
 });

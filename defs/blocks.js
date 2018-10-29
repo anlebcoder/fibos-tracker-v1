@@ -18,7 +18,7 @@ module.exports = db => {
 	 * @apiParam {String} producer 区块生产者
 	 * @apiParam {String} previous 向前 区块信息 [未实现]
 	 * @apiParam {String} transaction_mroot 交易 Merkle根节点 [未实现]
-	 * @apiParam {String} status 是否可逆状态 yes no
+	 * @apiParam {String} status 是否可逆状态 reversible noreversible
 	 * @apiParam {Date} createdAt
 	 * @apiParam {Date} changedAt
 	 */
@@ -59,8 +59,8 @@ module.exports = db => {
 		status: {
 			required: true,
 			type: "enum",
-			values: ["yes", "no"],
-			default: "no"
+			values: ["noreversible", "reversible"],
+			default: "reversible"
 		}
 	}, {
 		hooks: {},
@@ -84,7 +84,7 @@ module.exports = db => {
 	});
 
 	Blocks.updateStatus = function(bn) {
-		let rs = db.driver.execQuerySync("UPDATE `blocks` set status = 'yes', updatedAt = ? where block_num <= ? and status = 'no';", [new Date(), bn]);
+		let rs = db.driver.execQuerySync("UPDATE `blocks` set status = 'noreversible', updatedAt = ? where block_num <= ? and status = 'reversible';", [new Date(), bn]);
 		return rs.affected;
 	}
 
@@ -95,7 +95,7 @@ module.exports = db => {
 			});
 
 			if (!_block) {
-				d.status = "no";
+				d.status = "reversible";
 				_block = Blocks.createSync(d);
 			}
 
@@ -104,7 +104,7 @@ module.exports = db => {
 	}
 
 	Blocks.hasMany("actions", Actions, {}, {
-		reverse: "blocks"
+		reverse: "block"
 	});
 
 	return Blocks;

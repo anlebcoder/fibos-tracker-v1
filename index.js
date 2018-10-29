@@ -1,4 +1,5 @@
 const App = require('fib-app');
+const util = require("util");
 const http = require("http");
 const path = require("path");
 const fs = require("fs");
@@ -13,97 +14,125 @@ function Tracker() {
 	let app = new App(Config.DBconnString);
 
 	//load system app
-	app.db.use(require('./lib'));
+	app.db.use(require('./defs'));
 
 	this.use = (router, _app) => {
 		app.db.use([_app.define]);
 		hooks[router] = _app.hook;
 	};
 
-	this.emitter = (message) => {
-		if (!message || !message.producer_block_id) return;
+	this.emitter = (errCallback) => {
 
-		if (message.act.name === "onblock") return;
+		return (message) => {
+			if (!message || !message.producer_block_id) return;
 
-		console.time("emitter-running");
-		message = JSON.stringify(message, function(key, value) {
-			if (typeof value === 'bigint') {
-				return value.toString();
-			} else {
-				return value;
-			}
-		});
+			if (message.act.name === "onblock") return;
 
-		message = JSON.parse(message);
-
-		let ats = [];
-
-		let block_info = {
-			block_time: message.block_time,
-			producer: message.producer,
-			block_num: message.block_num,
-			producer_block_id: message.producer_block_id
-		}
-
-		function getActions(at) {
-			let inline_traces = at.inline_traces;
-
-			ats.push({
-				trx_id: at.trx_id,
-				contract_name: at.act.account,
-				action: at.act.name,
-				authorization: at.act.authorization.map(function(a) {
-					return a.actor + "@" + a.permission
-				}),
-				status: "no",
-				data: at.act.data,
-				rawData: ats.length === 0 ? at : {}
+			console.time("emitter-running");
+			message = JSON.stringify(message, function(key, value) {
+				if (typeof value === 'bigint') {
+					return value.toString();
+				} else {
+					return value;
+				}
 			});
 
-			inline_traces.forEach(getActions);
-		}
+			message = JSON.parse(message);
 
-		getActions(message);
+			let ats = [];
 
-		let messages = [];
-
-		app.db(db => {
-			try {
-				db.trans(() => {
-					let blocksTable = db.models.blocks;
-					let actionsTable = db.models.actions;
-
-					let _block = blocksTable.save(block_info);
-
-					let previousAction = null;
-
-					messages = ats.map((at, index) => {
-						let _action = actionsTable.createSync(at);
-
-						if (index === 0) {
-							_block.addActions(_action);
-							previousAction = _action;
-						}
-
-						if (previousAction) {
-							previousAction.addInlineactions(_action);
-						}
-
-						return _action;
-					});
-				});
-			} catch (e) {
-				console.error(e, e.stack);
-				console.error(message);
-				process.exit();
+			let block_info = {
+				block_time: message.block_time,
+				producer: message.producer,
+				block_num: message.block_num,
+				producer_block_id: message.producer_block_id
 			}
-		});
 
-		app.db(db => {
-			for (var h in hooks) hooks[h](db, messages);
-		});
-		console.timeEnd("emitter-running");
-	};
+			function getActions(at) {
+				let inline_traces = at.inline_traces;
+
+				ats.push({
+					trx_id: at.trx_id,
+					contract_name: at.act.account,
+					action: at.act.name,
+					authorization: at.act.authorization.map(function(a) {
+						return a.actor + "@" + a.permission
+					}),
+					status: "no",
+					data: at.act.data,
+					rawData: ats.length === 0 ? at : {}
+				});
+
+				inline_traces.forEach(getActions);
+			}
+
+			function getActions(at, remark) {
+				remark = remark || "";
+
+				ats.push({
+					remark: remark,
+					trx_id: at.trx_id,
+					contract_name: at.act.account,
+					action: at.act.name,
+					authorization: at.act.authorization.map(function(a) {
+						return a.actor + "@" + a.permission
+					}),
+					data: at.act.data,
+					rawData: ats.length === 0 ? at : {}
+				});
+
+				at.inline_traces.forEach(function(_at, index) {
+					getActions(_at, remark + "-" + index);
+				});
+			}
+
+			getActions(message);
+
+			let messages = [];
+
+			app.db(db => {
+				try {
+					db.trans(() => {
+						let blocksTable = db.models.blocks;
+						let actionsTable = db.models.actions;
+
+						let _block = blocksTable.save(block_info);
+
+						let previousActions = {};
+
+						messages = ats.map((at, index) => {
+							let remark = at.remark;
+							let _action = actionsTable.createSync(at);
+
+							previousActions[remark] = _action;
+
+							if (remark === "") { //top actions
+								_block.addActions(_action);
+							}
+
+							if (remark) {
+								let a = remark.split("-");
+								let prefix = a.slice(0, a.length - 1).join("-");
+								if (previousActions[prefix]) previousActions[prefix].addInline_actions(_action);
+							}
+
+							return _action;
+						});
+					});
+				} catch (e) {
+					console.error(e, e.stack);
+					console.error(message);
+					if (util.isFunction(errCallback)) errCallback(message, e);
+				}
+			});
+
+			app.db(db => {
+				for (var h in hooks) hooks[h](db, messages);
+			});
+
+			console.timeEnd("emitter-running");
+		};
+	}
 
 	this.startServer = () => {
 		console.notice("httpServer listen on 0.0.0.0:%s", Config.httpServerPort);
@@ -150,7 +179,7 @@ function Tracker() {
 				console.error(e.stack);
 			}
 
-		}, 60 * 1000);
+		}, 5 * 60 * 1000);
 	};
 }
 

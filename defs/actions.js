@@ -61,11 +61,11 @@ module.exports = db => {
 					"find": true,
 					"read": true,
 					"extends": {
-						"blocks": {
+						"block": {
 							"find": true,
 							"read": true
 						},
-						"inlineactions": {
+						"inline_actions": {
 							"find": true,
 							"read": true
 						}
@@ -75,7 +75,9 @@ module.exports = db => {
 		}
 	});
 
-	Actions.hasMany("inlineactions", Actions);
+	Actions.hasMany("inline_actions", Actions, {}, {
+		addAccessor: "addInline_actions"
+	});
 
 	return Actions;
 }

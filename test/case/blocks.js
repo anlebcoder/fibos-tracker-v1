@@ -26,7 +26,7 @@ describe("blocks case", () => {
                 }
             }`).json();
 
-		assert.equal(r.data.find_blocks.length, 1);
+		assert.ok(r.data.find_blocks.length > 0);
 	});
 
 	it("get blocks list", () => {
@@ -55,7 +55,7 @@ describe("blocks case", () => {
 		let r = graphql(`
 			{
                 blocks(id:"${id}"){
-                    id,
+                	id,
                     block_time,
                     block_num,
 					producer_block_id,

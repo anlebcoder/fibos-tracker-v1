@@ -116,10 +116,10 @@ App.Config.DBconnString = "mysql://root:123456@127.0.0.1/fibos_chain"; //设置�
 
 我们来使用框架设计一个只存储 eosio  账户合约的调用的模型。
 
-#### 1. 新建一个目录 defs
+#### 1. 新建一个目录 addons
 
 ``` sh
-mkdir defs
+mkdir addons
 
 ```
 
@@ -165,7 +165,7 @@ module.exports = {
 目前为止，我们可以监听到 emitter 插件推送的messages了，加载新的数据模型，运行代码试试：
 
 ```
-app.use("eosio_transactions",require("./defs/eosio_transactions.js"));
+app.use("eosio_transactions",require("./addons/eosio_transactions.js"));
 
 ```
 
