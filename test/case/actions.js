@@ -6,20 +6,20 @@ describe("actions case", () => {
 
 	it("find actions list", () => {
 		let r = graphql(`
-			{
+            {
                 find_actions(
                     skip: 0,
                     limit: 10,
                     order: "-id"
                 ){
-                    id,
-					trx_id,
-					contract_name,
-					action,
-					authorization,
-					data,
-					createdAt,
-					updatedAt
+                	id,
+                	trx_id,
+                	contract_name,
+                	action,
+                	authorization,
+                	data,
+                	createdAt,
+                	updatedAt
                 }
             }`).json();
 
@@ -31,16 +31,16 @@ describe("actions case", () => {
 		let id = 1;
 
 		let r = graphql(`
-			{
-                actions(id:"${id}"){
-                    id,
-					trx_id,
-					contract_name,
-					action,
-					authorization,
-					data,
-					createdAt,
-					updatedAt
+		    {
+		    	actions(id:"${id}"){
+		    		id,
+		    		trx_id,
+		    		contract_name,
+		    		action,
+		    		authorization,
+		    		data,
+		    		createdAt,
+		    		updatedAt
                 }
             }`).json();
 
@@ -52,38 +52,38 @@ describe("actions case", () => {
 		let id = 1;
 
 		let r = graphql(`
-			{
-                actions(id:"${id}"){
-                   	id,
-					trx_id,
-					contract_name,
-					action,
-					authorization,
-					data,
-					createdAt,
-					updatedAt
-					block{
-						id,
-	                    block_time,
-	                    block_num,
-						producer_block_id,
-						producer,
-						status,
-						createdAt,
-						updatedAt
-					},
-					inline_actions{
-						id,
-						trx_id,
-						contract_name,
-						action,
-						authorization,
-						data,
-						createdAt,
-						updatedAt
-					}
-                }
-            }`).json();
+		    {
+		    	actions(id:"${id}"){
+		    		id,
+		    		trx_id,
+		    		contract_name,
+		    		action,
+		    		authorization,
+		    		data,
+		    		createdAt,
+		    		updatedAt
+		    		block{
+		    			id,
+		    			block_time,
+		    			block_num,
+		    			producer_block_id,
+		    			producer,
+		    			status,
+		    			createdAt,
+		    			updatedAt
+		    		},
+		    		inline_actions{
+		    			id,
+		    			trx_id,
+		    			contract_name,
+		    			action,
+		    			authorization,
+		    			data,
+		    			createdAt,
+		    			updatedAt
+		    		}
+		    	}
+		    }`).json();
 
 		assert.equal(r.data.actions.inline_actions.length, 0);
 		assert.equal(r.data.actions.block.length, 1);
