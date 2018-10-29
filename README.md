@@ -56,7 +56,7 @@ fibos --install fibos-tracker
 |---------------------|--------|------------|
 | id     | Number   | 自增长id   |
 | trx_id | String    |   交易id  |
-| contract_name | BigInt    |   合约名称  |
+| contract_name | String    |   合约名称  |
 | action | String    |  action 名称   |
 | authorization | Array    |   授权用户  |
 | data | JSON    |  交易data   |
