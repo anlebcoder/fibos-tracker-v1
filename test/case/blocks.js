@@ -42,7 +42,7 @@ describe("blocks case", () => {
 					createdAt,
 					updatedAt
 				}
-}		`).json();
+			}`).json();
 
 		assert.equal(r.data.blocks.id, 1);
 	});
