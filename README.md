@@ -384,59 +384,209 @@ graphql(`
 
 ## 高级篇-使用 ORM 自定义数据
 
-### 快速定制自己的数据模型app
+学习了基础篇的应用，让我们使用 fibos-tracker 的 `use` 完成一个仅监控 eosio.token 合约 transfer 的应用。
 
-我们来使用框架设计一个只存储 eosio  账户合约的调用的模型。
+### 环境准备
 
-#### 1. 新建一个目录 addons
-
-``` sh
-mkdir addons
+基于上面的环境应用，让我们创建一个目录:
 
 ```
+:$ mkdir addons;cd addons;
+```
 
-#### 2. 新建文件 eosio_transactions.js
+### 设计&定义一个数据模型
 
-保存下面代码：
+设计数据表 eosio_token_transfer：
+
+| 字段                 | 类型 |	备注|
+|---------------------|--------|------------|
+| id     | Number   | 自增长id   |
+| from | String    |   转出方  |
+| to | String    |   转入方  |
+| quantity | String    |  交易数量   |
+| memo | String    |   memo  |
+| createdAt | Date    |   记录创建时间  |
+| updatedAt | Date    |   记录更新时间  |
+
+
+使用 ORM Define 数据表逻辑:
 
 ```
-module.exports = {
-	define: db => {
-		//定义数据表
-		return db.define('eosio_transactions', {
-			k: {
-				type: "text",
-				size: 32,
-				required: true,
-				unique: true
-			},
-			v: {
-				type: "integer",
-				size: 8,
-				defaultValue: 0
-			}
-		}, {
-			hooks: {},
-			methods: {},
-			validations: {},
-			functions: {},
-			ACL: function(session) {
-				return {
-					'*': false
-				};
-			},
-		});
-	},
-	hook: (db, messages) => {
-		//定义监控数据消息
-		console.log("eosio_transactions");
-	};
+let define = db => {
+	return db.define('eosio_token_transfer', {
+		from: {
+			required: true,
+			type: "text",
+			size: 12
+		},
+		to: {
+			required: true,
+			type: "text",
+			size: 12
+		},
+		quantity: {
+			required: true,
+			type: "text",
+			size: 256
+		},
+		memo: {
+			type: "text",
+			size: 256
+		}
+	}, {
+		hooks: {},
+		methods: {},
+		validations: {},
+		functions: {},
+		ACL: function(session) {
+			return {
+				'*': false
+			};
+		}
+	});
 }
 ```
 
-目前为止，我们可以监听到 emitter 插件推送的messages了，加载新的数据模型，运行代码试试：
+### 定义 hook 数据监听
+
+hook 监听的 messages 是一组系统 actions 表的 对象，请参考上面的 actions 表的数据表解释。
 
 ```
-tracker.use("eosio_transactions",require("./addons/eosio_transactions.js"));
+let hook = (db, messages) => {
+	let eosio_token_transfer = db.models.eosio_token_transfer;
 
+	let ats = [];
+
+	messages.forEach((at) => {
+		if (at.contract_name !== "eosio.token") return;
+
+		if (at.action !== "transfer") return;
+
+		let data = at.data;
+
+		ats.push({
+			from: data.from,
+			to: data.to,
+			quantity: data.quantity,
+			memo: data.memo
+		});
+	});
+
+	try {
+		db.trans((db) => {
+			ats.forEach(eosio_token_transfer.createSync);
+		});
+	} catch (e) {
+		console.error(e);
+	}
+}
+```
+
+### 保存自定义数据模型代码
+
+保存下面代码到 eosio_token_transfer.js：
+
+```
+let define = db => {
+	return db.define('eosio_token_transfer', {
+		from: {
+			required: true,
+			type: "text",
+			size: 12
+		},
+		to: {
+			required: true,
+			type: "text",
+			size: 12
+		},
+		quantity: {
+			required: true,
+			type: "text",
+			size: 256
+		},
+		memo: {
+			type: "text",
+			size: 256
+		}
+	}, {
+		hooks: {},
+		methods: {},
+		validations: {},
+		functions: {},
+		ACL: function(session) {
+			return {
+				'*': false
+			};
+		}
+	});
+}
+
+let hook = (db, messages) => {
+	let eosio_token_transfer = db.models.eosio_token_transfer;
+
+	let ats = [];
+
+	messages.forEach((at) => {
+		if (at.contract_name !== "eosio.token") return;
+
+		if (at.action !== "transfer") return;
+
+		let data = at.data;
+
+		ats.push({
+			from: data.from,
+			to: data.to,
+			quantity: data.quantity,
+			memo: data.memo
+		});
+	});
+
+	try {
+		db.trans((db) => {
+			ats.forEach(eosio_token_transfer.createSync);
+		});
+	} catch (e) {
+		console.error(e);
+	}
+}
+
+module.exports = {
+	define: define,
+	hook: hook
+}
+```
+
+### 使用 fibos-tracker 加载新的数据模型
+
+```
+tracker.use("eosio.token_transactions",require("./addons/eosio_token_transfer.js"));
+```
+
+
+#### 启动服务&使用 GraphQL 获取数据
+
+启动服务：
+```
+fibos index.js
+```
+
+查询 eosio_token_transfer 列表：
+
+```
+graphql(`
+{
+    find_eosio_token_transfer(
+        skip: 0,
+        limit: 10,
+        order: "-id"
+    ){
+        id,
+        from,
+        to,
+        quantity,
+        memo,
+        createdAt,
+        updatedAt
+    }
+}`)
 ```

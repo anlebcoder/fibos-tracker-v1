@@ -8,8 +8,6 @@ module.exports = db => {
 	 * @apiGroup Actions
 	 * @apiDescription Actions Table字段解释
 	 *
-	 * @apiParam {Number} blocks_has_id blocks关联ID
-	 * @apiParam {Number} actions_has_id actions关联ID
 	 * @apiParam {String} trx_id 交易id
 	 * @apiParam {String} contract_name 合约名称
 	 * @apiParam {String} action action 名称
