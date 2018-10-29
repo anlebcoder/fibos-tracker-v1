@@ -18,11 +18,9 @@ App.Config.DBconnString = "mysql://root:123456@127.0.0.1/fibos_chain";
 
 new App().startServer();
 
-run("./case/actions");
-
-// fs.readdir(path.join(__dirname, "./case"))
-// 	.filter(f => f.slice(-3) == ".js")
-// 	.forEach(f => run(`./case/${f}`));
+fs.readdir(path.join(__dirname, "./case"))
+	.filter(f => f.slice(-3) == ".js")
+	.forEach(f => run(`./case/${f}`));
 
 test.run(console.INFO);
 
