@@ -76,4 +76,69 @@ describe("blocks case", () => {
 
 		assert.equal(r.data.blocks.actions[0].id, 1);
 	});
+
+	it("get extends actions", () => {
+		let id = 1;
+
+		let r = graphql(`
+		{
+			blocks(id: "${id}") {
+				id,
+				block_time,
+				block_num,
+				producer_block_id,
+				producer,
+				status,
+				createdAt,
+				updatedAt,
+				actions {
+					id,
+					trx_id,
+					contract_name,
+					action,
+					authorization,
+					data,
+					createdAt,
+					updatedAt
+					inline_actions{
+							id,
+							trx_id,
+							contract_name,
+							action,
+							authorization,
+							data,
+							createdAt,
+							updatedAt,
+							inline_actions{
+								id,
+								trx_id,
+								contract_name,
+								action,
+								authorization,
+								data,
+								createdAt,
+								updatedAt
+							}
+						}
+					}
+				}
+			}`).json();
+
+		assert.equal(r.data.blocks.actions.length, 1);
+
+		assert.equal(r.data.blocks.actions[0].contract_name, "eosio");
+		assert.equal(r.data.blocks.actions[0].action, "buyrambytes");
+
+		assert.equal(r.data.blocks.actions[0].inline_actions.length, 2);
+		assert.equal(r.data.blocks.actions[0].inline_actions[0].contract_name, "eosio.token");
+		assert.equal(r.data.blocks.actions[0].inline_actions[0].action, "transfer");
+		assert.equal(r.data.blocks.actions[0].inline_actions[0].data.quantity, "303.6590 FO");
+		assert.equal(r.data.blocks.actions[0].inline_actions[0].inline_actions.length, 2);
+
+		assert.equal(r.data.blocks.actions[0].inline_actions[1].contract_name, "eosio.token");
+		assert.equal(r.data.blocks.actions[0].inline_actions[1].action, "transfer");
+		assert.equal(r.data.blocks.actions[0].inline_actions[1].data.quantity, "1.5260 FO");
+		assert.equal(r.data.blocks.actions[0].inline_actions[1].inline_actions.length, 1);
+
+	});
 });

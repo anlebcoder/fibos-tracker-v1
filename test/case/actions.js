@@ -23,11 +23,11 @@ describe("actions case", () => {
 				}
 			}`).json();
 
-		assert.ok(r.data.find_actions.length > 0);
-		assert.ok(r.data.find_actions[0].trx_id);
+		assert.equal(r.data.find_actions.length, 7);
+		assert.equal(r.data.find_actions[0].trx_id, "b6663a27007a38f7f9d3afc1dd3c817bb9cd167d4ec9a1facbfb2a7e36480333");
 	});
 
-	it("get actions list", () => {
+	it("get actions", () => {
 		let id = 1;
 
 		let r = graphql(`
@@ -48,7 +48,7 @@ describe("actions case", () => {
 		assert.ok(r.data.actions.trx_id);
 	});
 
-	it("get extends actions", () => {
+	it("get extends inline_actions", () => {
 		let id = 1;
 
 		let r = graphql(`
@@ -85,7 +85,7 @@ describe("actions case", () => {
 				}
 			}`).json();
 
-		assert.equal(r.data.actions.inline_actions.length, 0);
+		assert.equal(r.data.actions.inline_actions.length, 2);
 		assert.equal(r.data.actions.block.length, 1);
 	});
 });

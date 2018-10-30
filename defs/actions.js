@@ -22,12 +22,14 @@ module.exports = db => {
 		trx_id: {
 			required: true,
 			type: "text",
-			size: 64
+			size: 64,
+			index: true
 		},
 		contract_name: {
 			required: true,
 			type: "text",
-			size: 12
+			size: 12,
+			index: true
 		},
 		action: {
 			required: true,

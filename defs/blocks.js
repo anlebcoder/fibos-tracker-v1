@@ -60,7 +60,8 @@ module.exports = db => {
 			required: true,
 			type: "enum",
 			values: ["noreversible", "reversible"],
-			default: "reversible"
+			default: "reversible",
+			index: true
 		}
 	}, {
 		hooks: {},

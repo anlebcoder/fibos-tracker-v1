@@ -1,22 +1,13 @@
-const http = require("http");
 const fs = require("fs");
 const test = require('test');
 const path = require("path");
-const conf = require("../conf/conf.json");
-const App = require("../index.js");
 
-global.graphql = function(body) {
-	return http.post(`http://127.0.0.1:${conf.httpServerPort}/1.0/app/`, {
-		headers: {
-			'Content-Type': 'application/graphql'
-		},
-		body: body
-	});
-}
+["", "\-shm", "\-wal"].forEach(function(k) {
+	if (fs.exists("./fibos_chain.db" + k)) fs.unlink("./fibos_chain.db" + k);
+});
 
-App.Config.DBconnString = "mysql://root:123456@127.0.0.1/fibos_chain";
-
-new App().startServer();
+require("./init.js");
+require("../graphql.js");
 
 fs.readdir(path.join(__dirname, "./case"))
 	.filter(f => f.slice(-3) == ".js")

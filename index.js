@@ -1,24 +1,71 @@
 const App = require('fib-app');
 const util = require("util");
-const http = require("http");
 const path = require("path");
 const fs = require("fs");
-const mq = require("mq");
 const FIBOS = require("fibos.js");
 const conf = require("./conf/conf.json");
 
+function bigIntoString(d) {
+	for (let k in d) {
+		let v = d[k],
+			type = typeof v;
+
+		if (type === "bigint") d[k] = v.toString();
+
+		if (type === "object") bigIntoString(v);
+	}
+}
+
 function Tracker() {
+	//single instance
+	if (Tracker.single) return Tracker.single;
 
 	let Config = conf;
+	let nodeConfig = Config.nodeConfig;
 	let hooks = {};
-	let app = new App(Config.DBconnString);
 
-	//load system app
+	console.notice(`==========fibos-tracker==========\n\nDBconnString: ${Config.DBconnString}\n\nnodeConfig.chainId: ${nodeConfig.chainId}\n\nnodeConfig.httpEndpoint: ${nodeConfig.httpEndpoint}\n\n==========fibos-tracker==========`);
+
+	let app = new App(Config.DBconnString);
 	app.db.use(require('./defs'));
 
-	this.use = (router, _app) => {
-		app.db.use([_app.define]);
-		hooks[router] = _app.hook;
+	let client = FIBOS({
+		chainId: nodeConfig.chainId,
+		httpEndpoint: nodeConfig.httpEndpoint,
+		logger: {
+			log: null,
+			error: null
+		}
+	});
+
+	setInterval(() => {
+		try {
+			let bn = client.getInfoSync().last_irreversible_block_num;
+
+			let r = app.db(db => {
+				return db.models.blocks.updateStatus(bn);
+			});
+
+			console.notice("update blocks irreversible block:", r);
+		} catch (e) {
+			console.error("Chain Node:%s can not Connect!", nodeConfig.httpEndpoint);
+			console.error(e);
+		}
+
+	}, 5 * 1000);
+
+	this.app = app;
+
+	this.use = (filter, _app) => {
+		if (!filter || !_app) throw new Error("use function(filter,_app)");
+
+		if (hooks[filter]) console.warn("hook filter:%s will be replaced!", filter);
+
+		let define = _app.define;
+
+		app.db.use(util.isArray(define) ? define : [define]);
+
+		hooks[filter] = _app.hook;
 	};
 
 	this.emitter = (errCallback) => {
@@ -28,159 +75,84 @@ function Tracker() {
 
 			if (message.act.name === "onblock") return;
 
-			console.time("emitter-running");
-			message = JSON.stringify(message, function(key, value) {
-				if (typeof value === 'bigint') {
-					return value.toString();
-				} else {
-					return value;
-				}
-			});
+			console.time("emitter-time");
 
-			message = JSON.parse(message);
-
-			let ats = [];
-
-			let block_info = {
-				block_time: message.block_time,
-				producer: message.producer,
-				block_num: message.block_num,
-				producer_block_id: message.producer_block_id
-			}
-
-			function getActions(at) {
-				let inline_traces = at.inline_traces;
-
-				ats.push({
-					trx_id: at.trx_id,
-					contract_name: at.act.account,
-					action: at.act.name,
-					authorization: at.act.authorization.map(function(a) {
-						return a.actor + "@" + a.permission
-					}),
-					status: "no",
-					data: at.act.data,
-					rawData: ats.length === 0 ? at : {}
-				});
-
-				inline_traces.forEach(getActions);
-			}
-
-			function getActions(at, remark) {
-				remark = remark || "";
-
-				ats.push({
-					remark: remark,
-					trx_id: at.trx_id,
-					contract_name: at.act.account,
-					action: at.act.name,
-					authorization: at.act.authorization.map(function(a) {
-						return a.actor + "@" + a.permission
-					}),
-					data: at.act.data,
-					rawData: ats.length === 0 ? at : {}
-				});
-
-				at.inline_traces.forEach(function(_at, index) {
-					getActions(_at, remark + "-" + index);
-				});
-			}
-
-			getActions(message);
-
-			let messages = [];
+			bigIntoString(message);
 
 			app.db(db => {
 				try {
+					let messages = {};
+
+					function collectMessage(_action) {
+						function _c(k) {
+							if (hooks[k]) {
+								messages[k] = messages[k] || [];
+								messages[k].push(_action);
+							}
+						}
+
+						_c(_action.contract_name);
+
+						_c(_action.contract_name + "/" + _action.action);
+					}
+
 					db.trans(() => {
-						let blocksTable = db.models.blocks;
-						let actionsTable = db.models.actions;
+						let blocksTable = db.models.blocks,
+							actionsTable = db.models.actions,
+							_block = blocksTable.save({
+								block_time: message.block_time,
+								producer: message.producer,
+								block_num: message.block_num,
+								producer_block_id: message.producer_block_id
+							});
 
-						let _block = blocksTable.save(block_info);
+						function execActions(at, previousAction) {
 
-						let previousActions = {};
+							let _action = actionsTable.createSync({
+								trx_id: at.trx_id,
+								contract_name: at.act.account,
+								action: at.act.name,
+								authorization: at.act.authorization.map((a) => {
+									return a.actor + "@" + a.permission
+								}),
+								data: at.act.data,
+								rawData: !previousAction ? at : {}
+							});
 
-						messages = ats.map((at, index) => {
-							let remark = at.remark;
-							let _action = actionsTable.createSync(at);
+							collectMessage(_action);
 
-							previousActions[remark] = _action;
-
-							if (remark === "") { //top actions
+							if (!previousAction)
 								_block.addActions(_action);
-							}
+							else
+								previousAction.addInline_actions(_action);
 
-							if (remark) {
-								let a = remark.split("-");
-								let prefix = a.slice(0, a.length - 1).join("-");
-								if (previousActions[prefix]) previousActions[prefix].addInline_actions(_action);
-							}
+							at.inline_traces.forEach((_at) => {
+								execActions(_at, _action);
+							});
+						}
 
-							return _action;
-						});
+						execActions(message);
 					});
+
+					for (var k in messages)
+						if (hooks[k]) hooks[k](db, messages[k]);
+
 				} catch (e) {
-					console.error(e, e.stack);
-					console.error(message);
+					console.error(message, e, e.stack);
+
 					if (util.isFunction(errCallback)) errCallback(message, e);
 				}
 			});
 
-			app.db(db => {
-				for (var h in hooks) hooks[h](db, messages);
-			});
-
-			console.timeEnd("emitter-running");
+			console.timeEnd("emitter-time");
 		};
 	}
 
-	this.startServer = () => {
-		console.notice("httpServer listen on 0.0.0.0:%s", Config.httpServerPort);
-
+	this.diagram = () => {
 		fs.writeTextFile(path.join(__dirname, 'diagram.svg'), app.diagram());
+	}
 
-		let httpServer = new http.Server("", Config.httpServerPort, new mq.Chain([(req) => {
-				req.session = {};
-			}, {
-				'^/ping': function(req) {
-					req.response.write("pong");
-				},
-				'/1.0/app': app,
-				"*": [
-					function(req) {}
-				]
-			},
-			function(req) {}
-		]));
-		httpServer.crossDomain = true;
-		httpServer.asyncRun();
-
-		let nodeConfig = Config.nodeConfig;
-
-		let fibos = FIBOS({
-			chainId: nodeConfig.chainId,
-			httpEndpoint: nodeConfig.httpEndpoint,
-			logger: {
-				log: null,
-				error: null
-			}
-		});
-
-		setInterval(() => {
-			try {
-				let bn = fibos.getInfoSync().last_irreversible_block_num;
-
-				let r = app.db(db => {
-					return db.models.blocks.updateStatus(bn);
-				});
-
-				console.notice("update blocks irreversible block:", r);
-			} catch (e) {
-				console.error(e.stack);
-			}
-
-		}, 5 * 60 * 1000);
-	};
+	Tracker.single = this;
 }
 
 Tracker.Config = conf;

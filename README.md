@@ -79,16 +79,35 @@ Tracker.Config.DBconnString = "mysql://root:123456@127.0.0.1/fibos_chain";
 
 | name                 | desc |	default|
 |---------------------|--------|------------|
-| httpServerPort     | http 服务端口   | 8080   |
 | DBconnString | 数据存储引擎    | 默认使用SQLite存储引擎    |
-| websocketEnable | 是否开启websocket推送    | false    |
-| nodeConfig | http服务内置 fibos节点连接配置    |  |
+| nodeConfig | 框架内置 fibos节点连接配置，支持自动更新不可逆数据    |  |
 
 
 nodeConfig key 说明：
 
 - nodeConfig.chainId 节点 chainId  (默认使用 fibos testnet chainId)
-- nodeConfig.httpEndpoint 节点 http url (http://127.0.0.1:8870)
+- nodeConfig.httpEndpoint 节点 http-url (http://127.0.0.1:8870)
+
+#### tracker.app
+
+fib-app 的实例 app 对象，具体参看 fib-app (https://github.com/fibjs/fib-app)
+
+tracker.app 对象可支持路由访问。
+
+示例：
+
+```
+const http = require("http");
+const Tracker = require("fibos-tracker");
+const tracker = new Tracker();
+
+let httpServer = new http.Server("", 8080, {
+	'/1.0/app': tracker.app
+});
+
+httpServer.run();
+
+```
 
 #### tracker.emitter
 
@@ -119,18 +138,19 @@ tracker.emitter 参数 `errCallback` function. `errCallback` params:
 | e |  Object | emitter 执行过程的 Error 对象    |
 
 
-#### tracker.startServer
+#### tracker.diagram
 
-启动 fibos-tracker HTTP 服务
+生成数据表的关联图，如果自定义了数据表，需要先调用 tracker.use 再执行。
 
 示例：
 
 ```
-const fibos = require("fibos");
 const Tracker = require("fibos-tracker");
 const tracker = new Tracker();
 
-tracker.startServer();
+//If exist other db modles，please exec tracker.use.
+
+tracker.diagram();
 ```
 
 #### tracker.use
@@ -144,10 +164,24 @@ const fibos = require("fibos");
 const Tracker = require("fibos-tracker");
 const tracker = new Tracker();
 
-tracker.use("fibos_contract", {
+tracker.use("eosio/newaccount", {
 	define: (db) => {
 		// ORM DB Define
 	},
+	hook: (db, messages) => {
+		// hook Tracker messages
+	}
+});
+```
+支持define 数组形式：
+
+```
+tracker.use("eosio/newaccount", {
+	define: [(db) => {
+		// ORM DB Define A
+	}, (db) => {
+		// ORM DB Define B
+	}],
 	hook: (db, messages) => {
 		// hook Tracker messages
 	}
@@ -158,8 +192,14 @@ tracker.use 参数定义：
 
 | params             | type   | desc |
 |---------------------|--------|--------|
-| name     |String |自定义数据对象名称   |
-| app | JSON |自定义数据对象，包含 define function 定义 和 hook function 监听定义  |
+| filter     |String |自定义过滤规则,如： 'eosio.token','eosio.token/transfer'  |
+| app | Object | 自定义数据对象，包含 define function 定义 和 hook function 监听定义，支持数组形式  |
+
+
+filter 参数说明：
+
+- 过滤合约：'eosio.token' 过滤合约为 'eosio.token' 的 action
+- 过滤action：'eosio.token/transfer' 
 
 `app` 参数定义：
 
@@ -170,6 +210,8 @@ tracker.use 参数定义：
 
 
 ## Example 快速应用
+
+Example 源码见(./examples)
 
 学习了解 fibos-trakcer 之后，让我们开始动手编写，使用框架写一个区块链数据存储展现的应用。
 
@@ -245,6 +287,7 @@ Type ".help" for more information.
 保存下面代码到 index.js:
 
 ```
+onst http = require("http");
 const fibos = require("fibos");
 const Tracker = require("fibos-tracker");
 const tracker = new Tracker();
@@ -278,7 +321,22 @@ fibos.on('action', tracker.emitter(() => {
 }));
 
 fibos.start();
-tracker.startServer();
+
+let httpServer = new http.Server("", 8080, [
+	(req) => {
+		req.session = {};
+	}, {
+		'^/ping': (req) => {
+			req.response.write("pong");
+		},
+		'/1.0/app': tracker.app,
+		"*": [function(req) {}]
+	},
+	function(req) {}
+]);
+
+httpServer.crossDomain = true;
+httpServer.asyncRun();
 ```
 
 ### 启动服务
@@ -384,6 +442,8 @@ graphql(`
 
 ## 高级篇-使用 ORM 自定义数据
 
+Example 源码见(./examples)
+
 学习了基础篇的应用，让我们使用 fibos-tracker 的 `use` 完成一个仅监控 eosio.token 合约 transfer 的应用。
 
 ### 环境准备
@@ -396,7 +456,7 @@ graphql(`
 
 ### 设计&定义一个数据模型
 
-设计数据表 eosio_token_transfer：
+设计数据表 eosio_token_transfers：
 
 | 字段                 | 类型 |	备注|
 |---------------------|--------|------------|
@@ -413,7 +473,7 @@ graphql(`
 
 ```
 let define = db => {
-	return db.define('eosio_token_transfer', {
+	return db.define('eosio_token_transfers', {
 		from: {
 			required: true,
 			type: "text",
@@ -451,30 +511,16 @@ let define = db => {
 
 hook 监听的 messages 是一组系统 actions 表的 对象，请参考上面的 actions 表的数据表解释。
 
+tracker.use 需要对 hook 的接受数据进行过滤。
+
 ```
 let hook = (db, messages) => {
-	let eosio_token_transfer = db.models.eosio_token_transfer;
-
-	let ats = [];
-
-	messages.forEach((at) => {
-		if (at.contract_name !== "eosio.token") return;
-
-		if (at.action !== "transfer") return;
-
-		let data = at.data;
-
-		ats.push({
-			from: data.from,
-			to: data.to,
-			quantity: data.quantity,
-			memo: data.memo
-		});
-	});
-
+	let eosio_token_transfers = db.models.eosio_token_transfers;
 	try {
 		db.trans((db) => {
-			ats.forEach(eosio_token_transfer.createSync);
+			messages.forEach((m) => {
+				eosio_token_transfers.createSync(m.data);
+			});
 		});
 	} catch (e) {
 		console.error(e);
@@ -484,11 +530,11 @@ let hook = (db, messages) => {
 
 ### 保存自定义数据模型代码
 
-保存下面代码到 eosio_token_transfer.js：
+保存下面代码到 eosio_token_transfers.js：
 
 ```
 let define = db => {
-	return db.define('eosio_token_transfer', {
+	return db.define('eosio_token_transfers', {
 		from: {
 			required: true,
 			type: "text",
@@ -515,35 +561,22 @@ let define = db => {
 		functions: {},
 		ACL: function(session) {
 			return {
-				'*': false
+				'*': {
+					find: true,
+					read: true
+				}
 			};
 		}
 	});
 }
 
 let hook = (db, messages) => {
-	let eosio_token_transfer = db.models.eosio_token_transfer;
-
-	let ats = [];
-
-	messages.forEach((at) => {
-		if (at.contract_name !== "eosio.token") return;
-
-		if (at.action !== "transfer") return;
-
-		let data = at.data;
-
-		ats.push({
-			from: data.from,
-			to: data.to,
-			quantity: data.quantity,
-			memo: data.memo
-		});
-	});
-
+	let eosio_token_transfers = db.models.eosio_token_transfers;
 	try {
 		db.trans((db) => {
-			ats.forEach(eosio_token_transfer.createSync);
+			messages.forEach((m) => {
+				eosio_token_transfers.createSync(m.data);
+			});
 		});
 	} catch (e) {
 		console.error(e);
@@ -559,9 +592,8 @@ module.exports = {
 ### 使用 fibos-tracker 加载新的数据模型
 
 ```
-tracker.use("eosio.token_transactions",require("./addons/eosio_token_transfer.js"));
+tracker.use("eosio.token/transfer",require("./addons/eosio_token_transfers.js"));
 ```
-
 
 #### 启动服务&使用 GraphQL 获取数据
 
@@ -570,12 +602,12 @@ tracker.use("eosio.token_transactions",require("./addons/eosio_token_transfer.js
 fibos index.js
 ```
 
-查询 eosio_token_transfer 列表：
+查询 eosio_token_transfers 列表：
 
 ```
 graphql(`
 {
-    find_eosio_token_transfer(
+    find_eosio_token_transfers(
         skip: 0,
         limit: 10,
         order: "-id"

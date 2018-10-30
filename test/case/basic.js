@@ -9,7 +9,7 @@ describe("basic case", () => {
 
 		let config = App.Config;
 
-		["httpServerPort", "DBconnString", "websocketEnable", "nodeConfig"].forEach((k) => {
+		["DBconnString", "nodeConfig"].forEach((k) => {
 			assert.notEqual(config[k], undefined);
 		});
 
@@ -19,7 +19,7 @@ describe("basic case", () => {
 
 		assert.equal(config.websocketEnable, true);
 
-		["httpServerPort", "DBconnString", "websocketEnable", "nodeConfig"].forEach((k) => {
+		["DBconnString", "nodeConfig"].forEach((k) => {
 			assert.ok(config[k])
 		});
 	});
