@@ -209,7 +209,7 @@ tracker.use 参数定义：
 
 ## Example 快速应用
 
-[Example 源码见](./examples)
+[Example 源码](./examples)
 
 学习了解 fibos-trakcer 之后，让我们开始动手编写，使用框架写一个区块链数据存储展现的应用。
 
@@ -440,7 +440,7 @@ graphql(`
 
 ## 高级篇-使用 ORM 自定义数据
 
-[Example 源码见](./examples)
+[Example 源码](./examples)
 
 学习了基础篇的应用，让我们使用 fibos-tracker 的 `use` 完成一个仅监控 eosio.token 合约 transfer 的应用。
 
