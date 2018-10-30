@@ -15,16 +15,16 @@ fibos-tracker 是一个 FIBOS 区块链数据 API 服务框架，基于 fib-app 
 ## 目录
 
 <dl>
-<dt><a href="#fibos-version-support">FIBOS Version Support</a></dt>
+<dt><a href="#fibos-版本支持">FIBOS 版本支持</a></dt>
 <dd></dd>
 <dl>
-<dt><a href="#dbms-support">DBMS Support</a></dt>
+<dt><a href="#数据存储支持">数据存储支持</a></dt>
 <dd></dd>
 <dl>
-<dt><a href="#install">Install</a></dt>
+<dt><a href="#安装-fibos-tracker">安装 fibos-tracker</a></dt>
 <dd></dd>
 <dl>
-<dt><a href="#介绍使用">介绍使用</a></dt>
+<dt><a href="#框架说明及-API-使用">框架说明及 API 使用</a></dt>
 <dd></dd>
 <dt><a href="#example-快速应用">Example-快速应用</a></dt>
 <dd></dd>
@@ -32,26 +32,26 @@ fibos-tracker 是一个 FIBOS 区块链数据 API 服务框架，基于 fib-app 
 <dd></dd>
 </dl>
 
-## FIBOS Version Support
+## FIBOS 版本支持
 
-Supported: `v1.3.1.4+`
+支持: `v1.3.1.4+`
 
-Install URL: `curl -s https://fibos.io/download/installer.sh | sh`
+快速安装: `curl -s https://fibos.io/download/installer.sh | sh`
 
-## DBMS Support
+## 数据存储支持
 
 - Mysql
 - SQLite
 
-## Install
+## 安装 fibos-tracker
 
 ```
 fibos --install fibos-tracker
 ```
 
-## 介绍&&使用
+## 框架说明及 API 使用
 
-### fibos-tracker DB 介绍
+### fibos-tracker DB 说明
 
 框架默认存储了 blocks 以及 actions 的基础数据，如下图显示：
 
