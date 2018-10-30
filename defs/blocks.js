@@ -68,7 +68,7 @@ module.exports = db => {
 		methods: {},
 		validations: {},
 		functions: {},
-		ACL: function(session) {
+		ACL: (session) => {
 			return {
 				'*': {
 					"find": true,
@@ -84,13 +84,21 @@ module.exports = db => {
 		}
 	});
 
-	Blocks.updateStatus = function(bn) {
+	Blocks.updateStatus = (bn) => {
 		let rs = db.driver.execQuerySync("UPDATE `blocks` set status = 'noreversible', updatedAt = ? where block_num <= ? and status = 'reversible';", [new Date(), bn]);
 		return rs.affected;
 	}
 
-	Blocks.save = function(d) {
-		return blockCache.get("blocks_" + d.block_num, function() {
+	Blocks.get_sys_last = () => {
+		let rs = Blocks.find({
+			status: "noreversible"
+		}).order("-block_num").limit(1).runSync();
+
+		return rs.length === 1 ? rs[0].block_num : 0;
+	}
+
+	Blocks.save = (d) => {
+		return blockCache.get("blocks_" + d.block_num, () => {
 			let _block = Blocks.oneSync({
 				block_num: d.block_num
 			});

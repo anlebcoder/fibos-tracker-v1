@@ -11,7 +11,7 @@ describe("actions case", () => {
 					skip: 0,
 					limit: 10,
 					order: "-id"
-                ){
+				){
 					id,
 					trx_id,
 					contract_name,

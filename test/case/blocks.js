@@ -22,7 +22,7 @@ describe("blocks case", () => {
 					createdAt,
 					updatedAt
 				}
-            }`).json();
+			}`).json();
 
 		assert.ok(r.data.find_blocks.length > 0);
 	});

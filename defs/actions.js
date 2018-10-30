@@ -55,7 +55,7 @@ module.exports = db => {
 		methods: {},
 		validations: {},
 		functions: {},
-		ACL: function(session) {
+		ACL: (session) => {
 			return {
 				"*": {
 					"find": true,

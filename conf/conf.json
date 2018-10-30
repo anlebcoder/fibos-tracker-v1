@@ -1,7 +1,5 @@
 {
 	"DBconnString": "sqlite:./fibos_chain.db",
-	"nodeConfig": {
-		"chainId": "68cee14f598d88d340b50940b6ddfba28c444b46cd5f33201ace82c78896793a",
-		"httpEndpoint": "http://127.0.0.1:8870"
-	}
+	"emitterNodePort": 8870,
+	"onblockEnable": false
 }

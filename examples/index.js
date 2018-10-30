@@ -1,10 +1,10 @@
-//clean env
+// [clean env]
 const fs = require("fs");
 ["", "\-shm", "\-wal"].forEach(function(k) {
 	if (fs.exists("./fibos_chain.db" + k)) fs.unlink("./fibos_chain.db" + k);
 });
 
-// fibos
+// [fibos]
 const fibos = require("fibos");
 fibos.config_dir = "./data";
 fibos.data_dir = "./data";
@@ -30,18 +30,20 @@ fibos.load("chain", {
 fibos.load("chain_api");
 fibos.load("emitter");
 
-
-//fibos-tracker
+//[fibos-tracker]
 const Tracker = require("../");
 Tracker.Config.DBconnString = "mysql://root:123456@127.0.0.1/fibos_chain";
 const tracker = new Tracker();
 
 tracker.use("eosio.token/transfer", require("./addons/eosio_token_transfers.js"));
 
-fibos.on('action', tracker.emitter(() => {}));
+fibos.on('action', tracker.emitter((message, e) => {
+	// fibos.stop();
+}));
+
 fibos.start();
 
-// http server
+// [http server]
 const http = require("http");
 let httpServer = new http.Server("", 8080, [
 	(req) => {

@@ -4,7 +4,7 @@ fibos-tracker 是一个 FIBOS 区块链数据 API 服务框架，基于 fib-app 
 
 - 提供对 FIBOS 区块数据的 emitter 监听事件
 - 提供 http 服务，支持 GraphQL 调用
-- 支持使用 ORM模型 定制自己的数据模型 app，自定义数据表以及自定义 hook 监听数据
+- 支持使用 ORM模型 定制自己的数据模型 model，自定义数据表以及自定义 hook 监听数据
 
 使用之前您可能需要去了解一下这些内容：
 
@@ -29,7 +29,7 @@ Install URL: `curl -s https://fibos.io/download/installer.sh | sh`
 fibos --install fibos-tracker
 ```
 
-## 介绍&使用
+## 介绍&&使用
 
 ### fibos-tracker DB 介绍
 
@@ -75,18 +75,16 @@ Config 是 Tracker 全局属性，可以使用该属性快速修改配置，如�
 ```
 const Tracker = require("fibos-tracker");
 Tracker.Config.DBconnString = "mysql://root:123456@127.0.0.1/fibos_chain";
+Tracker.Config.emitterNodePort = 8888;
+Tracker.Config.onblockEnable = true;
 ```
 
 | name                 | desc |	default|
 |---------------------|--------|------------|
 | DBconnString | 数据存储引擎    | 默认使用SQLite存储引擎    |
-| nodeConfig | 框架内置 fibos节点连接配置，支持自动更新不可逆数据    |  |
+| emitterNodePort | emitter rpc port 端口   | 默认 8870  |
+| onblockEnable | 是否记录空块    | false |
 
-
-nodeConfig key 说明：
-
-- nodeConfig.chainId 节点 chainId  (默认使用 fibos testnet chainId)
-- nodeConfig.httpEndpoint 节点 http-url (http://127.0.0.1:8870)
 
 #### tracker.app
 
@@ -155,7 +153,7 @@ tracker.diagram();
 
 #### tracker.use
 
-自定义 hook 监听数据，使用 ORM 模型自定义DB存储以及处理。
+自定义 hook 监听数据，使用 ORM 模型自定义 DB 存储以及处理。
 
 简单示例：
 
@@ -173,7 +171,7 @@ tracker.use("eosio/newaccount", {
 	}
 });
 ```
-支持define 数组形式：
+define 支持数组形式：
 
 ```
 tracker.use("eosio/newaccount", {
@@ -193,15 +191,15 @@ tracker.use 参数定义：
 | params             | type   | desc |
 |---------------------|--------|--------|
 | filter     |String |自定义过滤规则,如： 'eosio.token','eosio.token/transfer'  |
-| app | Object | 自定义数据对象，包含 define function 定义 和 hook function 监听定义，支持数组形式  |
+| model | Object | 自定义数据对象，包含 define function 定义 和 hook function 监听定义  |
 
 
-filter 参数说明：
+`filter` 参数说明：
 
 - 过滤合约：'eosio.token' 过滤合约为 'eosio.token' 的 action
 - 过滤action：'eosio.token/transfer' 
 
-`app` 参数定义：
+`model` 参数定义：
 
 | key             | type   | desc | params| 
 |---------------------|--------|--------|--------|
@@ -367,7 +365,7 @@ let graphql = function(body) {
 }
 ```
 
-2. WEB GraphQL 客户端
+2. Web GraphQL 客户端
 
 Jquery Ajax 示例:
 
@@ -454,13 +452,13 @@ Example 源码见(./examples)
 :$ mkdir addons;cd addons;
 ```
 
-### 设计&定义一个数据模型
+### 设计&&定义一个数据模型
 
 设计数据表 eosio_token_transfers：
 
 | 字段                 | 类型 |	备注|
 |---------------------|--------|------------|
-| id     | Number   | 自增长id   |
+| id     | Number   | 自增长 id   |
 | from | String    |   转出方  |
 | to | String    |   转入方  |
 | quantity | String    |  交易数量   |
@@ -595,7 +593,7 @@ module.exports = {
 tracker.use("eosio.token/transfer",require("./addons/eosio_token_transfers.js"));
 ```
 
-#### 启动服务&使用 GraphQL 获取数据
+#### 启动服务&&使用 GraphQL 获取数据
 
 启动服务：
 ```

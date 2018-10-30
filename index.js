@@ -1,9 +1,10 @@
 const App = require('fib-app');
+const coroutine = require("coroutine");
 const util = require("util");
 const path = require("path");
 const fs = require("fs");
 const FIBOS = require("fibos.js");
-const conf = require("./conf/conf.json");
+const Config = require("./conf/conf.json");
 
 function bigIntoString(d) {
 	for (let k in d) {
@@ -17,26 +18,28 @@ function bigIntoString(d) {
 }
 
 function Tracker() {
-	//single instance
-	if (Tracker.single) return Tracker.single;
+	let hooks = {},
+		app = new App(Config.DBconnString);
 
-	let Config = conf;
-	let nodeConfig = Config.nodeConfig;
-	let hooks = {};
-
-	console.notice(`==========fibos-tracker==========\n\nDBconnString: ${Config.DBconnString}\n\nnodeConfig.chainId: ${nodeConfig.chainId}\n\nnodeConfig.httpEndpoint: ${nodeConfig.httpEndpoint}\n\n==========fibos-tracker==========`);
-
-	let app = new App(Config.DBconnString);
 	app.db.use(require('./defs'));
 
+	let sys_last_irreversible_block_num = app.db(db => {
+		return db.models.blocks.get_sys_last();
+	});
+
+	let httpEndpoint = "http://127.0.0.1:" + Config.emitterNodePort;
+
 	let client = FIBOS({
-		chainId: nodeConfig.chainId,
-		httpEndpoint: nodeConfig.httpEndpoint,
+		httpEndpoint: httpEndpoint,
 		logger: {
 			log: null,
 			error: null
 		}
 	});
+
+	console.notice(`==========fibos-tracker==========\n\nDBconnString: ${Config.DBconnString}\n\nemitterNode: ${httpEndpoint}\n\nsys_last_irreversible_block_num: ${sys_last_irreversible_block_num}\n\n==========fibos-tracker==========`);
+
+	coroutine.sleep(2000);
 
 	setInterval(() => {
 		try {
@@ -48,24 +51,23 @@ function Tracker() {
 
 			console.notice("update blocks irreversible block:", r);
 		} catch (e) {
-			console.error("Chain Node:%s can not Connect!", nodeConfig.httpEndpoint);
+			console.error("Chain Node:%s can not Connect!", httpEndpoint);
 			console.error(e);
 		}
-
 	}, 5 * 1000);
 
 	this.app = app;
 
-	this.use = (filter, _app) => {
-		if (!filter || !_app) throw new Error("use function(filter,_app)");
+	this.use = (filter, model) => {
+		if (!filter || !model) throw new Error("use function(filter,model)");
 
 		if (hooks[filter]) console.warn("hook filter:%s will be replaced!", filter);
 
-		let define = _app.define;
+		let define = model.define;
 
 		app.db.use(util.isArray(define) ? define : [define]);
 
-		hooks[filter] = _app.hook;
+		hooks[filter] = model.hook;
 	};
 
 	this.emitter = (errCallback) => {
@@ -73,15 +75,23 @@ function Tracker() {
 		return (message) => {
 			if (!message || !message.producer_block_id) return;
 
-			if (message.act.name === "onblock") return;
+			if (message.act.name === "onblock" && !Config.onblockEnable) return;
 
 			console.time("emitter-time");
 
 			bigIntoString(message);
 
+			if (sys_last_irreversible_block_num > message.block_num) {
+				console.error("sys block_num(%s) > node block_num(%s)", sys_last_irreversible_block_num, message.block_num);
+				if (util.isFunction(errCallback)) errCallback(message, {});
+				return;
+			}
+
 			app.db(db => {
 				try {
-					let messages = {};
+					let messages = {},
+						sys_blocksTable = db.models.blocks,
+						sys_actionsTable = db.models.actions;
 
 					function collectMessage(_action) {
 						function _c(k) {
@@ -97,18 +107,16 @@ function Tracker() {
 					}
 
 					db.trans(() => {
-						let blocksTable = db.models.blocks,
-							actionsTable = db.models.actions,
-							_block = blocksTable.save({
-								block_time: message.block_time,
-								producer: message.producer,
-								block_num: message.block_num,
-								producer_block_id: message.producer_block_id
-							});
+						let _block = sys_blocksTable.save({
+							block_time: message.block_time,
+							producer: message.producer,
+							block_num: message.block_num,
+							producer_block_id: message.producer_block_id
+						});
 
 						function execActions(at, previousAction) {
 
-							let _action = actionsTable.createSync({
+							let _action = sys_actionsTable.createSync({
 								trx_id: at.trx_id,
 								contract_name: at.act.account,
 								action: at.act.name,
@@ -151,10 +159,8 @@ function Tracker() {
 	this.diagram = () => {
 		fs.writeTextFile(path.join(__dirname, 'diagram.svg'), app.diagram());
 	}
-
-	Tracker.single = this;
 }
 
-Tracker.Config = conf;
+Tracker.Config = Config;
 
 module.exports = Tracker;
