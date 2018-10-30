@@ -1,6 +1,6 @@
 # fibos-tracker
 
-fibos-tracker 是一个 FIBOS 区块链数据 API 服务框架，基于 fib-app 框架实现(https://github.com/fibjs/fib-app).
+fibos-tracker 是一个 FIBOS 区块链数据 API 服务框架，基于 [fib-app](https://github.com/fibjs/fib-app) 框架实现.
 
 - 提供对 FIBOS 区块数据的 emitter 监听事件
 - 提供 http 服务，支持 GraphQL 调用
