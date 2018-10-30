@@ -8,9 +8,9 @@ fibos-tracker 是一个 FIBOS 区块链数据 API 服务框架，基于 fib-app 
 
 使用之前您可能需要去了解一下这些内容：
 
-- FIBOS (https://fibos.io)
-- GraphQL (http://graphql.cn/)
-- fib-app (https://github.com/fibjs/fib-app)
+- [FIBOS](https://fibos.io)
+- [GraphQL](http://graphql.cn/)
+- [fib-app](https://github.com/fibjs/fib-app)
 
 ## 目录
 
@@ -108,7 +108,7 @@ Tracker.Config.onblockEnable = true;
 
 #### tracker.app
 
-fib-app 的实例 app 对象，具体参看 fib-app (https://github.com/fibjs/fib-app)
+fib-app 的实例 app 对象，具体参看 [fib-app](https://github.com/fibjs/fib-app)
 
 tracker.app 对象可支持路由访问。
 
@@ -175,7 +175,7 @@ tracker.diagram();
 
 自定义 hook 监听数据，使用 ORM 模型自定义 DB 存储以及处理。
 
-简单示例：
+示例：
 
 ```
 const fibos = require("fibos");
@@ -191,7 +191,9 @@ tracker.use("eosio/newaccount", {
 	}
 });
 ```
-define 支持数组形式：
+define 支持数组形式，用于某个 model 需要多个数据表的场景。
+
+示例：
 
 ```
 tracker.use("eosio/newaccount", {
@@ -216,8 +218,8 @@ tracker.use 参数定义：
 
 `filter` 参数说明：
 
-- 过滤合约：'eosio.token' 过滤合约为 'eosio.token' 的 action
-- 过滤action：'eosio.token/transfer' 
+- 过滤某个合约：'eosio.token'
+- 过滤某个合约的 action：'eosio.token/transfer' 
 
 `model` 参数定义：
 
