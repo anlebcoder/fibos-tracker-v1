@@ -13,6 +13,7 @@ describe("blocks case", () => {
 					limit: 10,
 					order: "-block_num"
 				){
+					id,
 					block_time,
 					block_num,
 					producer_block_id,
@@ -67,6 +68,7 @@ describe("blocks case", () => {
 					block_num: "${block_num}"
 				}
 			) {
+				id,
 				block_num,
 				block_time,
 				producer_block_id,
