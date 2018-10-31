@@ -62,7 +62,7 @@ describe("actions case", () => {
 					data,
 					createdAt,
 					updatedAt
-					blocks{
+					block{
 						id,
 						block_num,
 						block_time,
@@ -86,6 +86,36 @@ describe("actions case", () => {
 			}`).json();
 
 		assert.equal(r.data.actions.inline_actions.length, 2);
-		assert.equal(r.data.actions.blocks.id, 1);
+		assert.equal(r.data.actions.block.id, 1);
+	});
+
+	it("get extends parent", () => {
+		let id = 2;
+
+		let r = graphql(`
+			{
+				actions(id:"${id}"){
+					id,
+					trx_id,
+					contract_name,
+					action,
+					authorization,
+					data,
+					createdAt,
+					updatedAt
+					parent{
+						id,
+						trx_id,
+						contract_name,
+						action,
+						authorization,
+						data,
+						createdAt,
+						updatedAt
+					}
+				}
+			}`).json();
+
+		assert.equal(r.data.actions.parent.id, 1);
 	});
 });
