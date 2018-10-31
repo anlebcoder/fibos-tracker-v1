@@ -63,9 +63,8 @@ describe("actions case", () => {
 					createdAt,
 					updatedAt
 					block{
-						id,
-						block_time,
 						block_num,
+						block_time,
 						producer_block_id,
 						producer,
 						status,
