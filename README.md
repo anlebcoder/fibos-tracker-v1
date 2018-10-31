@@ -61,11 +61,11 @@ fibos --install fibos-tracker
 
 | 字段                 | 类型 |	备注|
 |---------------------|--------|------------|
-| id     | Number   | 自增长id   |
+| id     | Number   | 自增长 id   |
 | block_time | Date    |   区块时间  |
 | block_num | BigInt    |   区块高度  |
-| producer_block_id | String    |  区块hash   |
-| producer | String    |   区块producer  |
+| producer_block_id | String    |  区块 hash   |
+| producer | String    |   区块 producer  |
 | status | String    |  可逆状态   |
 | createdAt | Date    |   记录创建时间  |
 | updatedAt | Date    |   记录更新时间  |
@@ -74,12 +74,12 @@ fibos --install fibos-tracker
 
 | 字段                 | 类型 |	备注|
 |---------------------|--------|------------|
-| id     | Number   | 自增长id   |
-| trx_id | String    |   交易id  |
+| id     | Number   | 自增长 id   |
+| trx_id | String    |   交易 id  |
 | contract_name | String    |   合约名称  |
 | action | String    |  action 名称   |
 | authorization | Array    |   授权用户  |
-| data | JSON    |  交易data   |
+| data | JSON    |  交易 data   |
 | rawData | JSON    |  原始数据   |
 | createdAt | Date    |   记录创建时间  |
 | updatedAt | Date    |   记录更新时间  |
@@ -101,8 +101,8 @@ Tracker.Config.onblockEnable = true;
 
 | name                 | desc |	default|
 |---------------------|--------|------------|
-| DBconnString | 数据存储引擎    | 默认使用SQLite存储引擎    |
-| emitterNodePort | emitter rpc port 端口   | 默认 8870  |
+| DBconnString | 数据存储引擎    | 默认使用 SQLite 存储引擎    |
+| emitterNodePort | emitter RPC Port   | 默认 8870  |
 | onblockEnable | 是否记录空块    | false |
 
 
@@ -212,7 +212,7 @@ tracker.use 参数定义：
 | key             | type   | desc | params| 
 |---------------------|--------|--------|--------|
 | defines     | Function |使用 ORM 模型定义数据表，提供 API 访问   | `(db)=>{}`参数 db 是 ORM 对象，可用于操作数据层 | 
-| hooks | Function | 支持过滤 action 数据的 hook function     | `(db,messages)=>{}` 参数 db 同 define db 对象，参数 messages 是 action Table 对象数据集合 |
+| hooks | Function | 支持过滤 action 数据的 hook function     | `(db,messages)=>{}` 参数 db 是 ORM 对象，参数 messages 是 action Table 对象集合 |
 
 hooks 的过滤规则说明：
 
