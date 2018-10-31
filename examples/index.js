@@ -37,8 +37,6 @@ const tracker = new Tracker();
 
 tracker.use(require("./addons/eosio_token_transfers.js"));
 
-process.exit();
-
 fibos.on('action', tracker.emitter((message, e) => {
 	// fibos.stop();
 }));
