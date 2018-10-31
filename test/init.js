@@ -6,6 +6,8 @@ const Tracker = require("../");
 const tracker = new Tracker();
 tracker.emitter(() => {})(require("./mock_db.json"));
 
+tracker.diagram();
+
 let httpServer = new http.Server("", 8080, [
 	(req) => {
 		req.session = {};
