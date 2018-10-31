@@ -1,5 +1,5 @@
 const http = require("http");
-const Tracker = require("../lib/");
+const Tracker = require("../");
 
 // Tracker.Config.DBconnString = "mysql://root:123456@127.0.0.1/fibos_chain";
 
