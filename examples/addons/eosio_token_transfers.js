@@ -1,4 +1,4 @@
-let define = db => {
+let defines = [db => {
 	return db.define('eosio_token_transfers', {
 		from: {
 			required: true,
@@ -33,22 +33,24 @@ let define = db => {
 			};
 		}
 	});
-}
+}];
 
-let hook = (db, messages) => {
-	let eosio_token_transfers = db.models.eosio_token_transfers;
-	try {
-		db.trans((db) => {
-			messages.forEach((m) => {
-				eosio_token_transfers.createSync(m.data);
+let hooks = {
+	"eosio.token/transfer": (db, messages) => {
+		let eosio_token_transfers = db.models.eosio_token_transfers;
+		try {
+			db.trans(() => {
+				messages.forEach((m) => {
+					eosio_token_transfers.createSync(m.data);
+				});
 			});
-		});
-	} catch (e) {
-		console.error(e);
+		} catch (e) {
+			console.error("eosio.token/transfer Error:", e);
+		}
 	}
 }
 
 module.exports = {
-	define: define,
-	hook: hook
+	defines: defines,
+	hooks: hooks
 }

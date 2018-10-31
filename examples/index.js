@@ -35,7 +35,9 @@ const Tracker = require("../");
 Tracker.Config.DBconnString = "mysql://root:123456@127.0.0.1/fibos_chain";
 const tracker = new Tracker();
 
-tracker.use("eosio.token/transfer", require("./addons/eosio_token_transfers.js"));
+tracker.use(require("./addons/eosio_token_transfers.js"));
+
+process.exit();
 
 fibos.on('action', tracker.emitter((message, e) => {
 	// fibos.stop();
