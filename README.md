@@ -93,21 +93,24 @@ Config 是 Tracker 全局属性，可以使用该属性快速修改配置，如�
 
 ```
 const Tracker = require("fibos-tracker");
+
 Tracker.Config.DBconnString = "mysql://root:123456@127.0.0.1/fibos_chain";
+
 Tracker.Config.emitterNodePort = 8888;
+
 Tracker.Config.onblockEnable = true;
 ```
 
 | name                 | desc |	default|
 |---------------------|--------|------------|
 | DBconnString | 数据存储引擎    | 默认使用 SQLite 存储引擎    |
-| emitterNodePort | emitter RPC Port   | 默认 8870  |
+| emitterNodePort | emitter RPC Port   | 默认访问端口 8870  |
 | onblockEnable | 是否记录空块    | false |
 
 
 #### tracker.app
 
-fib-app 的实例 app 对象，具体参看 [fib-app](https://github.com/fibjs/fib-app)
+fib-app 的实例 app 对象，具体请阅读 [fib-app](https://github.com/fibjs/fib-app) 相关文档。
 
 tracker.app 对象可支持路由访问。
 
@@ -215,8 +218,8 @@ tracker.use 参数定义：
 
 hooks 的过滤规则说明：
 
-- 过滤某个合约：'eosio.token'
-- 过滤某个合约的 action：'eosio.token/transfer' 
+- 过滤某个合约，如：`eosio.token`
+- 过滤某个合约的 action，如：`eosio.token/transfer`
 
 
 ## Example 快速应用
@@ -227,16 +230,11 @@ hooks 的过滤规则说明：
 
 与 FIBOS 的 emiiter结合，写一个应用。 它可以同步 FIBOS TestNet 网络区块数据，并且使用 GraphQL 获取应用数据。
 
-FIBOS TestNet： 
-
-- WebSite: https://testnet.fibos.fo/#/
-- ChainId: 68cee14f598d88d340b50940b6ddfba28c444b46cd5f33201ace82c78896793a
-- P2P: p2p-testnet.fibos.fo:9870
-
+[FIBOS TestNet WebSite](https://testnet.fibos.fo/#/)：
 
 ### 环境准备
 
-1. 下载 FIBOS
+1. 快速安装 FIBOS
 
 ```
 curl -s https://fibos.io/download/installer.sh | sh
@@ -248,8 +246,9 @@ curl -s https://fibos.io/download/installer.sh | sh
 $ fibos //Enter
 ```
 
-输出:(不同 FIBOS 版本输出信息不一致)
+输出：
 
+(不同 FIBOS 版本输出信息不一致)
 ```
 Welcome to FIBOS v1.3.1.3-3-g5f567ac. Based on fibjs 0.27.0-dev.
 Type ".help" for more information.
