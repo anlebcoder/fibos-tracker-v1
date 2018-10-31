@@ -61,7 +61,8 @@ fibos --install fibos-tracker
 
 | 字段                 | 类型 |	备注|
 |---------------------|--------|------------|
-| block_num | BigInt    |   区块高度  |
+| id     | Number   | 自增长 id   |
+| block_num | Number    |   区块高度  |
 | block_time | Date    |   区块时间  |
 | producer_block_id | String    |  区块 hash   |
 | producer | String    |   区块 producer  |

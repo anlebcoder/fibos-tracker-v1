@@ -27,6 +27,37 @@ describe("blocks case", () => {
 	});
 
 	it("get extends actions", () => {
+		let id = 1;
+
+		let r = graphql(`
+		{
+			blocks(id:"${id}") {
+				id,
+				block_num,
+				block_time,
+				producer_block_id,
+				producer,
+				status,
+				createdAt,
+				updatedAt,
+				actions {
+					id,
+					trx_id,
+					contract_name,
+					action,
+					authorization,
+					data,
+					createdAt,
+					updatedAt
+					}
+				}
+			}`).json();
+
+		assert.equal(r.data.blocks.id, 1);
+		assert.equal(r.data.blocks.actions[0].id, 1);
+	});
+
+	it("find extends actions", () => {
 		let block_num = 23;
 
 		let r = graphql(`
@@ -59,7 +90,7 @@ describe("blocks case", () => {
 		assert.equal(r.data.find_blocks[0].actions[0].id, 1);
 	});
 
-	it("get extends actions and inline_actions", () => {
+	it("find extends actions and inline_actions", () => {
 		let block_num = 23;
 
 		let r = graphql(`
@@ -69,6 +100,7 @@ describe("blocks case", () => {
 					block_num: "${block_num}"
 				}
 			) {
+				id,
 				block_num,
 				block_time,
 				producer_block_id,

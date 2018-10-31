@@ -62,7 +62,8 @@ describe("actions case", () => {
 					data,
 					createdAt,
 					updatedAt
-					block{
+					blocks{
+						id,
 						block_num,
 						block_time,
 						producer_block_id,
@@ -85,6 +86,6 @@ describe("actions case", () => {
 			}`).json();
 
 		assert.equal(r.data.actions.inline_actions.length, 2);
-		assert.equal(r.data.actions.block.length, 1);
+		assert.equal(r.data.actions.blocks.id, 1);
 	});
 });
