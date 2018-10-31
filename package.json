@@ -1,6 +1,6 @@
 {
 	"name": "fibos-tracker",
-	"main": "index.js",
+	"main": "./lib/",
 	"version": "1.0.0",
 	"description": "fibos chain data storage and api iframe",
 	"repository": "",

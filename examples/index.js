@@ -31,7 +31,7 @@ fibos.load("chain_api");
 fibos.load("emitter");
 
 //[fibos-tracker]
-const Tracker = require("../");
+const Tracker = require("../lib/");
 Tracker.Config.DBconnString = "mysql://root:123456@127.0.0.1/fibos_chain";
 const tracker = new Tracker();
 

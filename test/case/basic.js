@@ -1,7 +1,7 @@
 const test = require('test');
 test.setup();
 
-const App = require("../../index.js");
+const App = require("../../");
 
 describe("basic case", () => {
 
@@ -9,18 +9,18 @@ describe("basic case", () => {
 
 		let config = App.Config;
 
-		["DBconnString", "nodeConfig"].forEach((k) => {
+		["DBconnString", "emitterNodePort", "onblockEnable"].forEach((k) => {
 			assert.notEqual(config[k], undefined);
 		});
 
-		App.Config.websocketEnable = true;
+		App.Config.onblockEnable = true;
 
 		config = App.Config;
 
-		assert.equal(config.websocketEnable, true);
+		assert.equal(config.onblockEnable, true);
 
-		["DBconnString", "nodeConfig"].forEach((k) => {
-			assert.ok(config[k])
+		["DBconnString", "emitterNodePort", "onblockEnable"].forEach((k) => {
+			assert.notEqual(config[k], undefined);
 		});
 	});
 });
