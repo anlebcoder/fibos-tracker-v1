@@ -182,51 +182,42 @@ const fibos = require("fibos");
 const Tracker = require("fibos-tracker");
 const tracker = new Tracker();
 
-tracker.use("eosio/newaccount", {
-	define: (db) => {
+tracker.use({
+	defines: [(db) => {
 		// ORM DB Define
-	},
-	hook: (db, messages) => {
-		// hook Tracker messages
-	}
-});
-```
-define 支持数组形式，用于某个 model 需要多个数据表的场景。
-
-示例：
-
-```
-tracker.use("eosio/newaccount", {
-	define: [(db) => {
-		// ORM DB Define A
 	}, (db) => {
-		// ORM DB Define B
+		// ORM DB Define
 	}],
-	hook: (db, messages) => {
-		// hook Tracker messages
+	hooks: {
+		"eosio.token/transfer": (db, messages) => {
+			// hook Tracker messages
+		},
+		"eosio/newaccount": (db, messages) => {
+			// hook Tracker messages
+		}
 	}
 });
 ```
+defines 支持数组形式，满足某个 model 需要多个数据表的操作场景。
 
 tracker.use 参数定义：
 
 | params             | type   | desc |
 |---------------------|--------|--------|
-| filter     |String |自定义过滤规则,如： 'eosio.token','eosio.token/transfer'  |
-| model | Object | 自定义数据对象，包含 define function 定义 和 hook function 监听定义  |
+| model | Object | 自定义数据对象，包含 defines 和 hooks  |
 
 
-`filter` 参数说明：
-
-- 过滤某个合约：'eosio.token'
-- 过滤某个合约的 action：'eosio.token/transfer' 
-
-`model` 参数定义：
+`model` 内部参数定义：
 
 | key             | type   | desc | params| 
 |---------------------|--------|--------|--------|
-| define     | Function |使用 ORM 模型定义数据表，提供 API 访问   |参数 `db` ORM db对象，可用于操作数据层 | 
-| hook | Function | 监听 action 数据的 hook 方法     | 参数 db 同 define db对象，参数 messages 是 action 数据集合 |
+| defines     | Function |使用 ORM 模型定义数据表，提供 API 访问   | `(db)=>{}`参数 db 是 ORM 对象，可用于操作数据层 | 
+| hooks | Function | 支持过滤 action 数据的 hook function     | `(db,messages)=>{}` 参数 db 同 define db 对象，参数 messages 是 action Table 对象数据集合 |
+
+hooks 的过滤规则说明：
+
+- 过滤某个合约：'eosio.token'
+- 过滤某个合约的 action：'eosio.token/transfer' 
 
 
 ## Example 快速应用
@@ -465,68 +456,7 @@ graphql(`
 使用 ORM Define 数据表逻辑:
 
 ```
-let define = db => {
-	return db.define('eosio_token_transfers', {
-		from: {
-			required: true,
-			type: "text",
-			size: 12
-		},
-		to: {
-			required: true,
-			type: "text",
-			size: 12
-		},
-		quantity: {
-			required: true,
-			type: "text",
-			size: 256
-		},
-		memo: {
-			type: "text",
-			size: 256
-		}
-	}, {
-		hooks: {},
-		methods: {},
-		validations: {},
-		functions: {},
-		ACL: function(session) {
-			return {
-				'*': false
-			};
-		}
-	});
-}
-```
-
-### 定义 hook 数据监听
-
-hook 监听的 messages 是一组系统 actions 表的 对象，请参考上面的 actions 表的数据表解释。
-
-tracker.use 需要对 hook 的接受数据进行过滤。
-
-```
-let hook = (db, messages) => {
-	let eosio_token_transfers = db.models.eosio_token_transfers;
-	try {
-		db.trans((db) => {
-			messages.forEach((m) => {
-				eosio_token_transfers.createSync(m.data);
-			});
-		});
-	} catch (e) {
-		console.error(e);
-	}
-}
-```
-
-### 保存自定义数据模型代码
-
-保存下面代码到 eosio_token_transfers.js：
-
-```
-let define = db => {
+let defines = [db => {
 	return db.define('eosio_token_transfers', {
 		from: {
 			required: true,
@@ -561,31 +491,99 @@ let define = db => {
 			};
 		}
 	});
-}
+}];
+```
 
-let hook = (db, messages) => {
-	let eosio_token_transfers = db.models.eosio_token_transfers;
-	try {
-		db.trans((db) => {
-			messages.forEach((m) => {
-				eosio_token_transfers.createSync(m.data);
+### 定义 hook 数据监听
+
+hook 监听的 messages 是一组系统 actions 表的 对象，请参考上面的 actions 表的数据表解释。
+
+tracker.use 需要对 hook 的接受数据进行过滤。
+
+```
+let hooks = {
+	"eosio.token/transfer": (db, messages) => {
+		let eosio_token_transfers = db.models.eosio_token_transfers;
+		try {
+			db.trans(() => {
+				messages.forEach((m) => {
+					eosio_token_transfers.createSync(m.data);
+				});
 			});
-		});
-	} catch (e) {
-		console.error(e);
+		} catch (e) {
+			console.error("eosio.token/transfer Error:", e);
+		}
+	}
+}
+```
+
+### 保存自定义数据模型代码
+
+保存下面代码到 eosio_token_transfers.js：
+
+```
+let defines = [db => {
+	return db.define('eosio_token_transfers', {
+		from: {
+			required: true,
+			type: "text",
+			size: 12
+		},
+		to: {
+			required: true,
+			type: "text",
+			size: 12
+		},
+		quantity: {
+			required: true,
+			type: "text",
+			size: 256
+		},
+		memo: {
+			type: "text",
+			size: 256
+		}
+	}, {
+		hooks: {},
+		methods: {},
+		validations: {},
+		functions: {},
+		ACL: function(session) {
+			return {
+				'*': {
+					find: true,
+					read: true
+				}
+			};
+		}
+	});
+}];
+
+let hooks = {
+	"eosio.token/transfer": (db, messages) => {
+		let eosio_token_transfers = db.models.eosio_token_transfers;
+		try {
+			db.trans(() => {
+				messages.forEach((m) => {
+					eosio_token_transfers.createSync(m.data);
+				});
+			});
+		} catch (e) {
+			console.error("eosio.token/transfer Error:", e);
+		}
 	}
 }
 
 module.exports = {
-	define: define,
-	hook: hook
+	defines: defines,
+	hooks: hooks
 }
 ```
 
 ### 使用 fibos-tracker 加载新的数据模型
 
 ```
-tracker.use("eosio.token/transfer",require("./addons/eosio_token_transfers.js"));
+tracker.use(require("./addons/eosio_token_transfers.js"));
 ```
 
 #### 启动服务&&使用 GraphQL 获取数据
