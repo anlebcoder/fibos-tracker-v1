@@ -1,1 +1,1 @@
-Project haved transfer to [FIBOS](https://github.com/FIBOSIO/fibos-tracker)
+Project haved transfer to [FIBOSIO](https://github.com/FIBOSIO/fibos-tracker)
